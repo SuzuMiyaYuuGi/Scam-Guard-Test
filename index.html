@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scam Guard API Debug</title>
+    <!-- โหลด Tailwind CSS เพื่อความสวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#ff4b4b',
+                        'safe': '#10b981',
+                        'high-risk': '#ef4444',
+                        'medium-risk': '#f97316',
+                        'low-risk': '#facc15',
+                        'connected': '#10b981',
+                        'disconnected': '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background-color: #f3f4f6; }
+        /* กำหนดสีและสไตล์เพิ่มเติมสำหรับ Progress Bar */
+        .progress-bar-fill { transition: width 0.5s ease; height: 100%; border-radius: 9999px; }
+        .score-bar { height: 16px; background: #e5e7eb; border-radius: 9999px; }
+    </style>
+</head>
+<body onload="checkAPIServer()">
+    <div class="max-w-3xl mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-gray-900 mb-2 flex items-center justify-center">
+                <span class="mr-3">👮</span> Scam Guard API Tester
+            </h1>
+            <p class="text-gray-500">ทดสอบและตรวจสอบสถานะการทำงานของ FastAPI Server</p>
+        </div>
+
+        <!-- Debug Status Bar -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-3">สถานะระบบ (Debug)</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <!-- API Server Status -->
+                <div class="flex items-center">
+                    <span id="apiStatusDot" class="w-3 h-3 rounded-full mr-2 bg-gray-400 animate-pulse"></span>
+                    <span class="font-medium text-sm text-gray-700">FastAPI Server: </span>
+                    <span id="apiStatusText" class="ml-2 text-sm font-bold text-gray-500">กำลังตรวจสอบ...</span>
+                </div>
+                <!-- Ollama/AI Status -->
+                <div class="flex items-center">
+                    <span id="aiStatusDot" class="w-3 h-3 rounded-full mr-2 bg-gray-400"></span>
+                    <span class="font-medium text-sm text-gray-700">AI Engine (Ollama): </span>
+                    <span id="aiStatusText" class="ml-2 text-sm font-bold text-gray-500">รอการทดสอบ...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <label for="inputText" class="block text-gray-700 font-bold mb-2">ระบุข้อความ/บทสนทนาที่น่าสงสัย:</label>
+            <textarea id="inputText" class="w-full border border-gray-300 p-3 rounded-lg focus:ring-primary focus:border-primary text-gray-800" rows="4" placeholder="เช่น: ผมโทรมาจากธนาคารบัญชีคุณถูกระงับ ให้โอนเงินมาตรวจสอบ..."></textarea>
+            
+            <button onclick="analyzeText()" id="btnAnalyze" class="mt-4 bg-primary hover:bg-red-600 text-white font-bold py-3 rounded-lg transition duration-150 ease-in-out">
+                🚀 วิเคราะห์ความเสี่ยง
+            </button>
+            
+            <div id="loading" class="mt-4 text-center text-gray-600 font-medium hidden">
+                <svg class="animate-spin h-5 w-5 mr-3 inline-block text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                AI กำลังประมวลผลบน GPU... (รวดเร็วทันใจ)
+            </div>
+        </div>
+
+        <!-- Result Area -->
+        <div id="result" class="mt-8 p-6 rounded-lg shadow-xl bg-white border hidden">
+            <h3 class="text-2xl font-bold mb-4 text-center" id="verdict"></h3>
+            
+            <!-- Score Bar -->
+            <div class="mb-4">
+                <p class="text-sm font-medium text-gray-600 mb-1">โอกาสเป็นมิจฉาชีพ: <span id="scoreText" class="font-bold text-lg">0</span>%</p>
+                <div class="score-bar">
+                    <div id="scoreFill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-center mb-6 border-t pt-4">
+                <div>
+                    <p class="text-gray-500 text-sm">ระดับความเสี่ยง</p>
+                    <p class="text-xl font-extrabold" id="metricVerdict"></p>
+                </div>
+                <div>
+                    <p class="text-gray-500 text-sm">ตรงกับฐานข้อมูลเก่า</p>
+                    <p class="text-xl font-extrabold text-gray-700" id="metricPattern"></p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+                <p class="text-indigo-800 font-semibold mb-1">📝 บทวิเคราะห์:</p>
+                <p class="text-indigo-700 text-sm" id="analysis"></p>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const API_URL = 'https://devoted-four-blonde-specialists.trycloudflare.com'; // เปลี่ยนเป็น Cloudflared URL ถ้าใช้ Tunnel
+    
+    // --- ฟังก์ชันตรวจสอบสถานะ API ---
+    async function checkAPIServer() {
+        const dot = document.getElementById('apiStatusDot');
+        const text = document.getElementById('apiStatusText');
+        
+        try {
+            const response = await fetch(`${API_URL}/`);
+            if (response.ok) {
+                dot.className = 'w-3 h-3 rounded-full mr-2 bg-connected';
+                text.className = 'ml-2 text-sm font-bold text-connected';
+                text.innerText = 'ออนไลน์';
+            } else {
+                throw new Error("API responded with error status");
+            }
+        } catch (error) {
+            dot.className = 'w-3 h-3 rounded-full mr-2 bg-disconnected';
+            text.className = 'ml-2 text-sm font-bold text-disconnected';
+            text.innerText = 'ออฟไลน์';
+            alert("⚠️ FastAPI Server ไม่ทำงาน กรุณารัน 'python api.py' ก่อน");
+        }
+    }
+
+    // --- ฟังก์ชันวิเคราะห์ข้อความ ---
+    async function analyzeText() {
+        const text = document.getElementById('inputText').value.trim();
+        if (!text) return;
+
+        // UI Update: Disable button, show loading
+        document.getElementById('btnAnalyze').disabled = true;
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('result').classList.add('hidden');
+        
+        const aiDot = document.getElementById('aiStatusDot');
+        const aiText = document.getElementById('aiStatusText');
+        
+        aiDot.classList.remove('bg-connected', 'bg-disconnected', 'animate-pulse');
+        aiDot.classList.add('bg-yellow-500', 'animate-pulse');
+        aiText.innerText = 'กำลังประมวลผล...';
+
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                // ถ้า API ตอบกลับเป็น 400/500
+                aiDot.classList.remove('bg-yellow-500', 'animate-pulse');
+                aiDot.classList.add('bg-disconnected');
+                aiText.innerText = 'AI Error!';
+                throw new Error(data.detail || "API เกิดข้อผิดพลาดภายใน");
+            }
+            
+            // AI Success
+            aiDot.classList.remove('bg-yellow-500', 'animate-pulse');
+            aiDot.classList.add('bg-connected');
+            aiText.innerText = 'พร้อมใช้งาน';
+
+            // Render Results
+            renderResults(data);
+
+        } catch (error) {
+            console.error("Analysis Error:", error);
+            alert("⚠️ การวิเคราะห์ล้มเหลว: " + error.message);
+        } finally {
+            document.getElementById('btnAnalyze').disabled = false;
+            document.getElementById('loading').classList.add('hidden');
+        }
+    }
+
+    // --- ฟังก์ชันแสดงผลลัพธ์ ---
+    function renderResults(data) {
+        const score = data.scam_score;
+        const resultDiv = document.getElementById('result');
+        const scoreFill = document.getElementById('scoreFill');
+        
+        // กำหนดสีตามระดับความเสี่ยง
+        let colorClass, bgColor;
+        if (score > 80) {
+            colorClass = 'text-high-risk';
+            bgColor = 'bg-high-risk';
+        } else if (score > 40) {
+            colorClass = 'text-medium-risk';
+            bgColor = 'bg-medium-risk';
+        } else {
+            colorClass = 'text-safe';
+            bgColor = 'bg-safe';
+        }
+
+        // Apply Styles
+        resultDiv.classList.remove('hidden');
+        document.getElementById('verdict').className = `text-2xl font-bold mb-4 text-center ${colorClass}`;
+        document.getElementById('verdict').innerText = data.verdict;
+        document.getElementById('scoreText').innerText = score;
+        document.getElementById('metricVerdict').innerText = data.verdict;
+        document.getElementById('metricPattern').innerText = data.matched_pattern ? "พบเคสคล้ายกัน" : "รูปแบบใหม่";
+        document.getElementById('analysis').innerText = data.analysis_th;
+
+        scoreFill.style.width = score + "%";
+        scoreFill.style.backgroundColor = bgColor;
+        resultDiv.style.borderColor = bgColor; // border สีตามความเสี่ยง
+    }
+</script>
+
+</body>
+</html>
