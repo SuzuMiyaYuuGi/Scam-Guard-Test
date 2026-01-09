@@ -268,10 +268,9 @@
             scoreText.innerText = data.scam_score;
             scoreText.className = `text-2xl font-bold ${titleColor}`;
             
-            pattern.innerText = data.matched_pattern ? "⚠️ พบในฐานข้อมูล" : "🆕 รูปแบบใหม่";
-            pattern.className = data.matched_pattern ? "font-bold text-red-600" : "font-medium text-slate-700";
+            pattern.innerText = data.matched_pattern 
+            pattern.className = "font-bold text-red-600"; 
             
-            // อัปเดตเวลาที่ใช้
             timeDisplay.innerText = `${duration} วินาที`;
             timeDisplay.className = "font-bold text-slate-800 text-lg";
             
