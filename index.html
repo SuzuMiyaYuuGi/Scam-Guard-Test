@@ -23,10 +23,13 @@
                             700: '#1d4ed8',
                         },
                         risk: {
-                            low: '#10b981',    /* Green */
-                            medium: '#f59e0b', /* Amber */
-                            high: '#ef4444'    /* Red */
+                            safe: '#10b981',      // Green
+                            watch: '#38bdf8',     // Blue
+                            risk: '#facc15',      // Yellow
+                            danger: '#fb923c',    // Orange
+                            scam: '#ef4444'       // Red
                         }
+
                     }
                 }
             }
@@ -142,159 +145,191 @@
     </footer>
 
     <script>
-        // *******************************************************************
-        // CONFIGURATION
-        // *******************************************************************
-        const API_URL = 'https://maranda-unhoed-unpervertedly.ngrok-free.dev'; 
+    // *******************************************************************
+    // CONFIGURATION
+    // *******************************************************************
+    const API_URL = 'https://maranda-unhoed-unpervertedly.ngrok-free.dev'; 
 
-        function handleEnter(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); 
-                const btn = document.getElementById('analyzeBtn');
-                if (!btn.disabled) {
-                    analyzeText();
-                }
-            }
-        }
-
-        // --- 1. Check API Status on Load ---
-        async function checkAPIServer() {
-            const dot = document.getElementById('apiStatusDot');
-            const text = document.getElementById('apiStatusText');
-            try {
-                const response = await fetch(`${API_URL}/`);
-                if (response.ok) {
-                    dot.className = 'w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse';
-                    text.innerText = 'Online';
-                    text.className = 'text-green-400 font-bold';
-                }
-            } catch (error) {
-                dot.className = 'w-2 h-2 rounded-full bg-red-500 mr-2';
-                text.innerText = 'Offline';
-                text.className = 'text-red-400 font-bold';
-            }
-        }
-
-        // --- 2. Main Analyze Function (With Timer) ---
-        async function analyzeText() {
-            const inputField = document.getElementById('inputText');
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); 
             const btn = document.getElementById('analyzeBtn');
-            const aiStatusText = document.getElementById('aiStatusText');
-            const aiDot = document.getElementById('aiStatusDot');
-            
-            const text = inputField.value.trim();
-
-            if (!text) {
-                alert("กรุณากรอกข้อความก่อนกดวิเคราะห์");
-                inputField.focus();
-                return;
-            }
-
-            // --- เริ่มจับเวลา ---
-            const startTime = performance.now();
-
-            btn.disabled = true;
-            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> กำลังประมวลผล...`;
-            
-            aiStatusText.innerText = "Processing...";
-            aiStatusText.className = "text-yellow-400 font-bold";
-            aiDot.className = "w-2 h-2 rounded-full bg-yellow-400 mr-2 animate-pulse";
-
-            document.getElementById('resultSection').classList.add('hidden');
-
-            try {
-                const response = await fetch(`${API_URL}/analyze`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-
-                const data = await response.json();
-                
-                // --- หยุดจับเวลา ---
-                const endTime = performance.now();
-                // คำนวณเวลาเป็นวินาที (ทศนิยม 2 ตำแหน่ง)
-                const duration = ((endTime - startTime) / 1000).toFixed(2);
-
-                if (!response.ok) throw new Error(data.detail || "API Error");
-
-                aiStatusText.innerText = "Ready";
-                aiStatusText.className = "text-green-400 font-bold";
-                aiDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
-
-                // ส่งค่าเวลาไปแสดงผลด้วย
-                displayResult(data, duration);
-
-            } catch (error) {
-                alert("เกิดข้อผิดพลาด: " + error.message);
-                aiStatusText.innerText = "Error";
-                aiStatusText.className = "text-red-400 font-bold";
-                aiDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<span>🔍 วิเคราะห์ความเสี่ยง (Enter)</span>`;
+            if (!btn.disabled) {
+                analyzeText();
             }
         }
+    }
 
-        // --- 3. Display Logic (Updated) ---
-        function displayResult(data, duration) {
-            const section = document.getElementById('resultSection');
-            const card = document.getElementById('verdictCard');
-            const title = document.getElementById('verdictTitle');
-            const scoreText = document.getElementById('scoreText');
-            const scoreFill = document.getElementById('scoreFill');
-            const pattern = document.getElementById('patternText');
-            const timeDisplay = document.getElementById('timeText'); // จุดแสดงเวลา
-            const analysis = document.getElementById('analysisText');
-
-            let themeColor, titleColor;
-            if (data.scam_score > 80) {
-                themeColor = 'border-risk-high'; 
-                titleColor = 'text-risk-high';
-                scoreFill.className = 'h-full rounded-full bg-red-500';
-            } else if (data.scam_score > 40) {
-                themeColor = 'border-risk-medium'; 
-                titleColor = 'text-risk-medium';
-                scoreFill.className = 'h-full rounded-full bg-orange-500';
-            } else {
-                themeColor = 'border-risk-low'; 
-                titleColor = 'text-risk-low';
-                scoreFill.className = 'h-full rounded-full bg-green-500';
+    // --- 1. Check API Status on Load ---
+    async function checkAPIServer() {
+        const dot = document.getElementById('apiStatusDot');
+        const text = document.getElementById('apiStatusText');
+        try {
+            const response = await fetch(`${API_URL}/`);
+            if (response.ok) {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse';
+                text.innerText = 'Online';
+                text.className = 'text-green-400 font-bold';
             }
+        } catch (error) {
+            dot.className = 'w-2 h-2 rounded-full bg-red-500 mr-2';
+            text.innerText = 'Offline';
+            text.className = 'text-red-400 font-bold';
+        }
+    }
 
-            card.className = `bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6 ${themeColor}`;
-            title.className = `text-3xl font-extrabold ${titleColor}`;
-            title.innerText = data.verdict;
-            scoreText.innerText = data.scam_score;
-            scoreText.className = `text-2xl font-bold ${titleColor}`;
-            
-            pattern.innerText = data.matched_pattern 
-            pattern.className = "font-bold text-red-600"; 
-            
-            timeDisplay.innerText = `${duration} วินาที`;
-            timeDisplay.className = "font-bold text-slate-800 text-lg";
-            
-            analysis.innerText = data.analysis_th;
+    // --- 2. Main Analyze Function (With Timer) ---
+    async function analyzeText() {
+        const inputField = document.getElementById('inputText');
+        const btn = document.getElementById('analyzeBtn');
+        const aiStatusText = document.getElementById('aiStatusText');
+        const aiDot = document.getElementById('aiStatusDot');
+        
+        const text = inputField.value.trim();
 
-            scoreFill.style.width = '0%';
-            section.classList.remove('hidden');
-            setTimeout(() => {
-                section.classList.remove('opacity-0', 'translate-y-4');
-                scoreFill.style.width = `${data.scam_score}%`;
-            }, 50);
-
-            section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (!text) {
+            alert("กรุณากรอกข้อความก่อนกดวิเคราะห์");
+            inputField.focus();
+            return;
         }
 
-        function resetForm() {
-            document.getElementById('inputText').value = '';
-            document.getElementById('inputText').focus();
-            const section = document.getElementById('resultSection');
-            section.classList.add('opacity-0', 'translate-y-4');
-            setTimeout(() => {
-                section.classList.add('hidden');
-            }, 300);
+        const startTime = performance.now();
+
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10"
+                        stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0
+                         C5.373 0 0 5.373 0 12h4
+                         zm2 5.291A7.962 7.962 0 014 12H0
+                         c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            กำลังประมวลผล...
+        `;
+        
+        aiStatusText.innerText = "Processing...";
+        aiStatusText.className = "text-yellow-400 font-bold";
+        aiDot.className = "w-2 h-2 rounded-full bg-yellow-400 mr-2 animate-pulse";
+
+        document.getElementById('resultSection').classList.add('hidden');
+
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await response.json();
+            const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+
+            if (!response.ok) throw new Error(data.detail || "API Error");
+
+            aiStatusText.innerText = "Ready";
+            aiStatusText.className = "text-green-400 font-bold";
+            aiDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
+
+            displayResult(data, duration);
+
+        } catch (error) {
+            alert("เกิดข้อผิดพลาด: " + error.message);
+            aiStatusText.innerText = "Error";
+            aiStatusText.className = "text-red-400 font-bold";
+            aiDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span>🔍 วิเคราะห์ความเสี่ยง (Enter)</span>`;
         }
+    }
+
+    // --- 3. Display Logic (MATCH BACKEND 100%) ---
+    function displayResult(data, duration) {
+        const section = document.getElementById('resultSection');
+        const card = document.getElementById('verdictCard');
+        const title = document.getElementById('verdictTitle');
+        const scoreText = document.getElementById('scoreText');
+        const scoreFill = document.getElementById('scoreFill');
+        const pattern = document.getElementById('patternText');
+        const timeDisplay = document.getElementById('timeText');
+        const analysis = document.getElementById('analysisText');
+
+        const score = Number(data.scam_score);
+
+        let verdict = '';
+        let borderColor = '';
+        let titleColor = '';
+        let barColor = '';
+
+        // === Mapping ตาม Backend ===
+        if (score >= 81) {
+            verdict = 'มิจฉาชีพแน่นอน';
+            borderColor = 'border-risk-scam';
+            titleColor = 'text-risk-scam';
+            barColor = 'bg-red-500';
+
+        } else if (score >= 61) {
+            verdict = 'อันตราย';
+            borderColor = 'border-risk-danger';
+            titleColor = 'text-risk-danger';
+            barColor = 'bg-orange-400';
+
+        } else if (score >= 41) {
+            verdict = 'เสี่ยง';
+            borderColor = 'border-risk-risk';
+            titleColor = 'text-risk-risk';
+            barColor = 'bg-yellow-400';
+
+        } else if (score >= 21) {
+            verdict = 'เฝ้าระวัง';
+            borderColor = 'border-risk-watch';
+            titleColor = 'text-risk-watch';
+            barColor = 'bg-sky-400';
+
+        } else {
+            verdict = 'ปลอดภัย';
+            borderColor = 'border-risk-safe';
+            titleColor = 'text-risk-safe';
+            barColor = 'bg-green-500';
+        }
+
+        card.className = `bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6 ${borderColor}`;
+        title.className = `text-3xl font-extrabold ${titleColor}`;
+        title.innerText = verdict;
+
+        scoreText.innerText = score;
+        scoreText.className = `text-2xl font-bold ${titleColor}`;
+
+        scoreFill.className = `h-full rounded-full transition-all duration-1000 ease-out ${barColor}`;
+        scoreFill.style.width = '0%';
+
+        pattern.innerText = data.matched_pattern
+            ? '⚠️ พบรูปแบบที่เคยใช้ในคดีมิจฉาชีพ'
+            : '🆕 ยังไม่พบในฐานข้อมูลเดิม';
+        pattern.className = data.matched_pattern
+            ? 'font-bold text-red-600'
+            : 'font-medium text-slate-700';
+
+        timeDisplay.innerText = `${duration} วินาที`;
+        analysis.innerText = data.analysis_th;
+
+        section.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+        setTimeout(() => {
+            scoreFill.style.width = `${score}%`;
+        }, 100);
+
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+        document.getElementById('inputText').value = '';
+        document.getElementById('inputText').focus();
+        const section = document.getElementById('resultSection');
+        section.classList.add('opacity-0', 'translate-y-4');
+        setTimeout(() => section.classList.add('hidden'), 300);
+    }
     </script>
 </body>
 </html>
