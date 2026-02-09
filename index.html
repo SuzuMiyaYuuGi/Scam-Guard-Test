@@ -1,326 +1,335 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scam Guard AI - Risk Analyzer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Prompt', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-                        },
-                        risk: {
-                            safe: '#10b981',      // Green
-                            watch: '#38bdf8',     // Blue
-                            risk: '#facc15',      // Yellow
-                            danger: '#fb923c',    // Orange
-                            scam: '#ef4444'       // Red
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { background-color: #f8fafc; }
-        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .spinner {
-            border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scam Guard AI - Risk Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        risk: {
+                            safe: '#10b981',      // Green
+                            watch: '#38bdf8',     // Blue
+                            risk: '#facc15',      // Yellow
+                            danger: '#fb923c',    // Orange
+                            scam: '#ef4444'       // Red
+                        }
+
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f8fafc; }
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
+    </style>
 </head>
 <body onload="checkAPIServer()" class="min-h-screen flex flex-col text-slate-800">
 
-    <div class="bg-slate-900 text-white py-2 px-4 text-xs font-medium">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center">
-                    <span id="apiStatusDot" class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-                    <span>API Server: <span id="apiStatusText" class="opacity-75">Checking...</span></span>
-                </div>
-            </div>
-            <div class="opacity-50">Async Mode</div>
-        </div>
-    </div>
+    <div class="bg-slate-900 text-white py-2 px-4 text-xs font-medium">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="flex items-center">
+                    <span id="apiStatusDot" class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                    <span>API Server: <span id="apiStatusText" class="opacity-75">Checking...</span></span>
+                </div>
+                <div class="flex items-center">
+                    <span id="aiStatusDot" class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                    <span>AI Engine: <span id="aiStatusText" class="opacity-75">Waiting...</span></span>
+                </div>
+            </div>
+            <div class="opacity-50">Dev Mode</div>
+        </div>
+    </div>
 
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-2xl">
-        
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center p-3 bg-brand-100 rounded-full mb-4 shadow-sm">
-                <span class="text-3xl">🛡️</span>
-            </div>
-            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">ตรวจสอบความเสี่ยงมิจฉาชีพ</h1>
-            <p class="text-slate-500 text-lg">AI-Powered Scam Detector (Fast & Deep Scan)</p>
-        </div>
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-2xl">
+        
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center p-3 bg-brand-100 rounded-full mb-4 shadow-sm">
+                <span class="text-3xl">🛡️</span>
+            </div>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2">ตรวจสอบความเสี่ยงมิจฉาชีพ</h1>
+            <p class="text-slate-500 text-lg">AI-Powered Scam Detector</p>
+        </div>
 
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="p-6 md:p-8">
-                <label for="inputText" class="block text-slate-700 font-semibold mb-3 text-lg">
-                    ข้อความที่น่าสงสัย
-                </label>
-                <textarea id="inputText" 
-                          onkeydown="handleEnter(event)"
-                          class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all text-slate-700 text-base resize-none placeholder-slate-400" 
-                          rows="5" 
-                          placeholder="วางข้อความแชท, SMS หรือสิ่งที่คนร้ายพูดที่นี่... (กด Enter เพื่อวิเคราะห์, Shift+Enter เพื่อขึ้นบรรทัดใหม่)"></textarea>
-                
-                <div class="mt-6">
-                    <button id="analyzeBtn" onclick="analyzeText()" 
-                            class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
-                        <span>🔍 วิเคราะห์ความเสี่ยง</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+            <div class="p-6 md:p-8">
+                <label for="inputText" class="block text-slate-700 font-semibold mb-3 text-lg">
+                    ข้อความที่น่าสงสัย
+                </label>
+                <textarea id="inputText" 
+                          onkeydown="handleEnter(event)"
+                          class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all text-slate-700 text-base resize-none placeholder-slate-400" 
+                          rows="5" 
+                          placeholder="วางข้อความแชท, SMS หรือสิ่งที่คนร้ายพูดที่นี่... (กด Enter เพื่อวิเคราะห์, Shift+Enter เพื่อขึ้นบรรทัดใหม่)"></textarea>
+                
+                <div class="mt-6">
+                    <button id="analyzeBtn" onclick="analyzeText()" 
+                            class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+                        <span>🔍 วิเคราะห์ความเสี่ยง</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-        <div id="resultSection" class="mt-8 hidden transition-all duration-500 ease-in-out opacity-0 transform translate-y-4">
-            
-            <div id="verdictCard" class="bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6">
-                <div class="p-6 md:p-8">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <div>
-                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">ผลการวิเคราะห์</h2>
-                            <h3 id="verdictTitle" class="text-3xl font-extrabold text-slate-900"></h3>
-                        </div>
-                        <div class="mt-4 md:mt-0 flex items-center bg-slate-100 px-4 py-2 rounded-lg">
-                            <span class="text-slate-500 font-medium mr-2">ความเสี่ยง</span>
-                            <span id="scoreText" class="text-2xl font-bold text-slate-800">0</span>
-                            <span class="text-sm text-slate-400 ml-1">%</span>
-                        </div>
-                    </div>
+        <div id="resultSection" class="mt-8 hidden transition-all duration-500 ease-in-out opacity-0 transform translate-y-4">
+            
+            <div id="verdictCard" class="bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6">
+                <div class="p-6 md:p-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">ผลการวิเคราะห์</h2>
+                            <h3 id="verdictTitle" class="text-3xl font-extrabold text-slate-900"></h3>
+                        </div>
+                        <div class="mt-4 md:mt-0 flex items-center bg-slate-100 px-4 py-2 rounded-lg">
+                            <span class="text-slate-500 font-medium mr-2">ความเสี่ยง</span>
+                            <span id="scoreText" class="text-2xl font-bold text-slate-800">0</span>
+                            <span class="text-sm text-slate-400 ml-1">%</span>
+                        </div>
+                    </div>
 
-                    <div class="w-full bg-slate-200 rounded-full h-3 mb-6 overflow-hidden">
-                        <div id="scoreFill" class="h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-3 mb-6 overflow-hidden">
+                        <div id="scoreFill" class="h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                    </div>
 
-                    <div class="grid grid-cols-2 gap-4 mb-6">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p class="text-xs text-slate-500 mb-1">รูปแบบ (Pattern)</p>
-                            <p id="patternText" class="font-semibold text-slate-700"></p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-center">
-                            <p class="text-xs text-slate-500 mb-1">⏱️ เวลาประมวลผล (Fast)</p>
-                            <p id="timeText" class="font-semibold text-slate-700 text-lg">-</p>
-                        </div>
-                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <p class="text-xs text-slate-500 mb-1">รูปแบบ (Pattern)</p>
+                            <p id="patternText" class="font-semibold text-slate-700"></p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-center">
+                            <p class="text-xs text-slate-500 mb-1">⏱️ เวลาประมวลผล</p>
+                            <p id="timeText" class="font-semibold text-slate-700 text-lg">-</p>
+                        </div>
+                    </div>
 
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
-                        <p class="text-xs text-slate-500 mb-1">🔍 หลักฐานที่พบ (Evidence)</p>
-                        <p id="evidenceText" class="font-mono text-sm text-red-600 whitespace-pre-line leading-relaxed">-</p>
-                    </div>
+                    <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl mt-1">💡</span>
+                            <div>
+                                <h4 class="font-bold text-brand-700 mb-1">มุมมองของ AI</h4>
+                                <p id="analysisText" class="text-brand-800 leading-relaxed text-sm md:text-base"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
-                        <div class="flex items-start gap-3">
-                            <span class="text-2xl mt-1">💡</span>
-                            <div class="w-full">
-                                <div class="flex justify-between items-center mb-2">
-                                    <h4 class="font-bold text-brand-700">มุมมองของ AI</h4>
-                                    <span id="aiTimeText" class="text-xs font-mono text-brand-600 bg-white/60 px-2 py-1 rounded hidden">
-                                        ⏱️ 0.00s
-                                    </span>
-                                </div>
-                                <p id="analysisText" class="text-brand-800 leading-relaxed text-sm md:text-base">
-                                    <span class="spinner"></span> กำลังวิเคราะห์เชิงลึก...
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="text-center">
+                <button onclick="resetForm()" class="text-slate-400 hover:text-slate-600 font-medium text-sm underline transition-colors">
+                    ล้างค่าและตรวจสอบใหม่
+                </button>
+            </div>
+        </div>
 
-            <div class="text-center">
-                <button onclick="resetForm()" class="text-slate-400 hover:text-slate-600 font-medium text-sm underline transition-colors">
-                    ล้างค่าและตรวจสอบใหม่
-                </button>
-            </div>
-        </div>
+    </main>
 
-    </main>
+    <footer class="text-center py-6 text-slate-400 text-sm">
+        <p>&copy; 2026 Scam Guard Project. Powered by Ollama & FastAPI.</p>
+    </footer>
 
-    <footer class="text-center py-6 text-slate-400 text-sm">
-        <p>&copy; 2026 Scam Guard Project. Powered by Ollama & FastAPI (Async).</p>
-    </footer>
+    <script>
+    // *******************************************************************
+    // CONFIGURATION
+    // *******************************************************************
+    const API_URL = 'https://maranda-unhoed-unpervertedly.ngrok-free.dev'; 
 
-    <script>
-    // ✅ ถ้าใช้ Ngrok ให้แก้ตรงนี้เป็น URL ของ Ngrok (เช่น https://xxxx.ngrok-free.dev)
-const API_URL = 'https://maranda-unhoed-unpervertedly.ngrok-free.dev';
+    function handleEnter(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); 
+            const btn = document.getElementById('analyzeBtn');
+            if (!btn.disabled) {
+                analyzeText();
+            }
+        }
+    }
 
-    function handleEnter(e) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); 
-            const btn = document.getElementById('analyzeBtn');
-            if (!btn.disabled) {
-                analyzeText();
-            }
-        }
-    }
+    // --- 1. Check API Status on Load ---
+    async function checkAPIServer() {
+        const dot = document.getElementById('apiStatusDot');
+        const text = document.getElementById('apiStatusText');
+        try {
+            const response = await fetch(`${API_URL}/`);
+            if (response.ok) {
+                dot.className = 'w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse';
+                text.innerText = 'Online';
+                text.className = 'text-green-400 font-bold';
+            }
+        } catch (error) {
+            dot.className = 'w-2 h-2 rounded-full bg-red-500 mr-2';
+            text.innerText = 'Offline';
+            text.className = 'text-red-400 font-bold';
+        }
+    }
 
-    async function checkAPIServer() {
-        const dot = document.getElementById('apiStatusDot');
-        const text = document.getElementById('apiStatusText');
-        try {
-            const response = await fetch(`${API_URL}/`);
-            if (response.ok) {
-                dot.className = 'w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse';
-                text.innerText = 'Online';
-                text.className = 'text-green-400 font-bold';
-            }
-        } catch (error) {
-            dot.className = 'w-2 h-2 rounded-full bg-red-500 mr-2';
-            text.innerText = 'Offline';
-            text.className = 'text-red-400 font-bold';
-        }
-    }
+    // --- 2. Main Analyze Function (With Timer) ---
+    async function analyzeText() {
+        const inputField = document.getElementById('inputText');
+        const btn = document.getElementById('analyzeBtn');
+        const aiStatusText = document.getElementById('aiStatusText');
+        const aiDot = document.getElementById('aiStatusDot');
+        
+        const text = inputField.value.trim();
 
-    async function analyzeText() {
-        const inputField = document.getElementById('inputText');
-        const btn = document.getElementById('analyzeBtn');
-        const text = inputField.value.trim();
+        if (!text) {
+            alert("กรุณากรอกข้อความก่อนกดวิเคราะห์");
+            inputField.focus();
+            return;
+        }
 
-        if (!text) {
-            alert("กรุณากรอกข้อความก่อนกดวิเคราะห์");
-            inputField.focus();
-            return;
-        }
+        const startTime = performance.now();
 
-        const startTime = performance.now();
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10"
+                        stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0
+                         C5.373 0 0 5.373 0 12h4
+                         zm2 5.291A7.962 7.962 0 014 12H0
+                         c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            กำลังประมวลผล...
+        `;
+        
+        aiStatusText.innerText = "Processing...";
+        aiStatusText.className = "text-yellow-400 font-bold";
+        aiDot.className = "w-2 h-2 rounded-full bg-yellow-400 mr-2 animate-pulse";
 
-        // UI Loading State
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner mr-2"></span> กำลังตรวจสอบ...`;
-        
-        // Reset AI Section
-        document.getElementById('analysisText').innerHTML = `<span class="spinner mr-2"></span> กำลังปรึกษา AI (ขั้นตอนนี้อาจใช้เวลา 10-15 วินาที)...`;
-        document.getElementById('aiTimeText').classList.add('hidden'); // ซ่อนเวลา AI ไว้ก่อน
-        
-        document.getElementById('resultSection').classList.add('hidden');
+        document.getElementById('resultSection').classList.add('hidden');
 
-        try {
-            // --- STEP 1: Fast Analysis ---
-            const responseFast = await fetch(`${API_URL}/analyze_fast`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
+        try {
+            const response = await fetch(`${API_URL}/analyze`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
 
-            if (!responseFast.ok) throw new Error("Fast API Error");
+            const data = await response.json();
+            const duration = ((performance.now() - startTime) / 1000).toFixed(2);
 
-            const dataFast = await responseFast.json();
-            const durationFast = ((performance.now() - startTime) / 1000).toFixed(2);
+            if (!response.ok) throw new Error(data.detail || "API Error");
 
-            // แสดงผลทันที
-            displayResult(dataFast, durationFast);
-            
-            // คืนปุ่มให้กดได้
-            btn.disabled = false;
-            btn.innerHTML = `<span>🔍 วิเคราะห์ความเสี่ยง (Enter)</span>`;
+            aiStatusText.innerText = "Ready";
+            aiStatusText.className = "text-green-400 font-bold";
+            aiDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
 
-            // --- STEP 2: AI Analysis (Background) ---
-            const responseAI = await fetch(`${API_URL}/analyze_ai`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
+            displayResult(data, duration);
 
-            if (!responseAI.ok) throw new Error("AI API Error");
+        } catch (error) {
+            alert("เกิดข้อผิดพลาด: " + error.message);
+            aiStatusText.innerText = "Error";
+            aiStatusText.className = "text-red-400 font-bold";
+            aiDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = `<span>🔍 วิเคราะห์ความเสี่ยง (Enter)</span>`;
+        }
+    }
 
-            const dataAI = await responseAI.json();
-            
-            // ✅ คำนวณเวลาเสร็จสิ้นของ AI
-            const durationAI = ((performance.now() - startTime) / 1000).toFixed(2);
-            
-            // ✅ โชว์เวลา AI
-            const aiTimeEl = document.getElementById('aiTimeText');
-            aiTimeEl.innerText = `⏱️ ใช้เวลาคิด ${durationAI} วินาที`;
-            aiTimeEl.classList.remove('hidden');
+    // --- 3. Display Logic (MATCH BACKEND 100%) ---
+    function displayResult(data, duration) {
+        const section = document.getElementById('resultSection');
+        const card = document.getElementById('verdictCard');
+        const title = document.getElementById('verdictTitle');
+        const scoreText = document.getElementById('scoreText');
+        const scoreFill = document.getElementById('scoreFill');
+        const pattern = document.getElementById('patternText');
+        const timeDisplay = document.getElementById('timeText');
+        const analysis = document.getElementById('analysisText');
 
-            // อัปเดตข้อความ AI (Typewriter Effect)
-            typeWriterEffect(dataAI.analysis_th, "analysisText");
+        const score = Number(data.scam_score);
 
-        } catch (error) {
-            alert("เกิดข้อผิดพลาด: " + error.message);
-            btn.disabled = false;
-            btn.innerHTML = `<span>🔍 วิเคราะห์ความเสี่ยง (Enter)</span>`;
-            document.getElementById('analysisText').innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI";
-        }
-    }
+        let verdict = '';
+        let borderColor = '';
+        let titleColor = '';
+        let barColor = '';
 
-    function displayResult(data, duration) {
-        const section = document.getElementById('resultSection');
-        const card = document.getElementById('verdictCard');
-        const title = document.getElementById('verdictTitle');
-        const scoreText = document.getElementById('scoreText');
-        const scoreFill = document.getElementById('scoreFill');
-        const pattern = document.getElementById('patternText');
-        const timeDisplay = document.getElementById('timeText');
-        const evidenceDisplay = document.getElementById('evidenceText');
+        // === Mapping ตาม Backend ===
+        if (score >= 81) {
+            verdict = 'มิจฉาชีพแน่นอน';
+            borderColor = 'border-risk-scam';
+            titleColor = 'text-risk-scam';
+            barColor = 'bg-red-500';
 
-        const score = Number(data.scam_score);
-        let verdict = data.risk_level; 
-        let borderColor, titleColor, barColor;
+        } else if (score >= 61) {
+            verdict = 'อันตราย';
+            borderColor = 'border-risk-danger';
+            titleColor = 'text-risk-danger';
+            barColor = 'bg-orange-400';
 
-        // แปลง Risk Level เป็นภาษาไทยและสี
-        if (score >= 75) {
-            verdict = 'อันตรายสูง (Critical)'; borderColor = 'border-risk-scam'; titleColor = 'text-risk-scam'; barColor = 'bg-red-500';
-        } else if (score >= 40) {
-            verdict = 'น่าสงสัย (Suspicious)'; borderColor = 'border-risk-risk'; titleColor = 'text-risk-risk'; barColor = 'bg-yellow-400';
-        } else {
-            verdict = 'ปลอดภัย (Low Risk)'; borderColor = 'border-risk-safe'; titleColor = 'text-risk-safe'; barColor = 'bg-green-500';
-        }
+        } else if (score >= 41) {
+            verdict = 'เสี่ยง';
+            borderColor = 'border-risk-risk';
+            titleColor = 'text-risk-risk';
+            barColor = 'bg-yellow-400';
 
-        card.className = `bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6 ${borderColor}`;
-        title.className = `text-3xl font-extrabold ${titleColor}`;
-        title.innerText = verdict;
+        } else if (score >= 21) {
+            verdict = 'เฝ้าระวัง';
+            borderColor = 'border-risk-watch';
+            titleColor = 'text-risk-watch';
+            barColor = 'bg-sky-400';
 
-        scoreText.innerText = score;
-        scoreText.className = `text-2xl font-bold ${titleColor}`;
+        } else {
+            verdict = 'ปลอดภัย';
+            borderColor = 'border-risk-safe';
+            titleColor = 'text-risk-safe';
+            barColor = 'bg-green-500';
+        }
 
-        scoreFill.className = `h-full rounded-full transition-all duration-1000 ease-out ${barColor}`;
-        scoreFill.style.width = '0%';
+        card.className = `bg-white rounded-2xl shadow-lg overflow-hidden border-l-8 mb-6 ${borderColor}`;
+        title.className = `text-3xl font-extrabold ${titleColor}`;
+        title.innerText = verdict;
 
-        pattern.innerText = data.found_pattern ? '⚠️ พบรูปแบบต้องสงสัย' : '✅ ไม่พบรูปแบบชัดเจน';
-        pattern.className = data.found_pattern ? 'font-bold text-red-600' : 'font-medium text-slate-700';
-        
-        evidenceDisplay.innerText = data.evidence || "-";
-        timeDisplay.innerText = `${duration} วินาที`;
+        scoreText.innerText = score;
+        scoreText.className = `text-2xl font-bold ${titleColor}`;
 
-        section.classList.remove('hidden', 'opacity-0', 'translate-y-4');
-        setTimeout(() => { scoreFill.style.width = `${score}%`; }, 100);
-        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+        scoreFill.className = `h-full rounded-full transition-all duration-1000 ease-out ${barColor}`;
+        scoreFill.style.width = '0%';
 
-    function typeWriterEffect(text, elementId) {
-        const element = document.getElementById(elementId);
-        element.innerHTML = "";
-        let i = 0;
-        const speed = 10; 
-        function type() {
-            if (i < text.length) {
-                element.innerHTML += text.charAt(i);
-                i++;
-                setTimeout(type, speed);
-            }
-        }
-        type();
-    }
+        pattern.innerText = data.matched_pattern
+            ? '⚠️ พบรูปแบบที่เคยใช้ในคดีมิจฉาชีพ'
+            : '🆕 ยังไม่พบในฐานข้อมูลเดิม';
+        pattern.className = data.matched_pattern
+            ? 'font-bold text-red-600'
+            : 'font-medium text-slate-700';
 
-    function resetForm() {
-        document.getElementById('inputText').value = '';
-        document.getElementById('inputText').focus();
-        const section = document.getElementById('resultSection');
-        section.classList.add('opacity-0', 'translate-y-4');
-        setTimeout(() => section.classList.add('hidden'), 300);
-    }
-    </script>
+        timeDisplay.innerText = `${duration} วินาที`;
+        analysis.innerText = data.analysis_th;
+
+        section.classList.remove('hidden', 'opacity-0', 'translate-y-4');
+        setTimeout(() => {
+            scoreFill.style.width = `${score}%`;
+        }, 100);
+
+        section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function resetForm() {
+        document.getElementById('inputText').value = '';
+        document.getElementById('inputText').focus();
+        const section = document.getElementById('resultSection');
+        section.classList.add('opacity-0', 'translate-y-4');
+        setTimeout(() => section.classList.add('hidden'), 300);
+    }
+    </script>
 </body>
 </html>
