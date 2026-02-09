@@ -122,8 +122,13 @@
                     <div class="bg-brand-50 rounded-xl p-5 border border-brand-100">
                         <div class="flex items-start gap-3">
                             <span class="text-2xl mt-1">💡</span>
-                            <div>
-                                <h4 class="font-bold text-brand-700 mb-1">มุมมองของ AI</h4>
+                            <div class="w-full">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-bold text-brand-700">มุมมองของ AI</h4>
+                                    <span id="aiTimeText" class="text-xs font-mono text-brand-600 bg-white/60 px-2 py-1 rounded hidden">
+                                        ⏱️ 0.00s
+                                    </span>
+                                </div>
                                 <p id="analysisText" class="text-brand-800 leading-relaxed text-sm md:text-base">
                                     <span class="spinner"></span> กำลังวิเคราะห์เชิงลึก...
                                 </p>
@@ -147,7 +152,8 @@
     </footer>
 
     <script>
-    const API_URL = 'http://localhost:8080'; 
+    // ✅ ถ้าใช้ Ngrok ให้แก้ตรงนี้เป็น URL ของ Ngrok (เช่น https://xxxx.ngrok-free.dev)
+const API_URL = 'https://maranda-unhoed-unpervertedly.ngrok-free.dev';
 
     function handleEnter(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -195,6 +201,7 @@
         
         // Reset AI Section
         document.getElementById('analysisText').innerHTML = `<span class="spinner mr-2"></span> กำลังปรึกษา AI (ขั้นตอนนี้อาจใช้เวลา 10-15 วินาที)...`;
+        document.getElementById('aiTimeText').classList.add('hidden'); // ซ่อนเวลา AI ไว้ก่อน
         
         document.getElementById('resultSection').classList.add('hidden');
 
@@ -209,10 +216,10 @@
             if (!responseFast.ok) throw new Error("Fast API Error");
 
             const dataFast = await responseFast.json();
-            const duration = ((performance.now() - startTime) / 1000).toFixed(2);
+            const durationFast = ((performance.now() - startTime) / 1000).toFixed(2);
 
             // แสดงผลทันที
-            displayResult(dataFast, duration);
+            displayResult(dataFast, durationFast);
             
             // คืนปุ่มให้กดได้
             btn.disabled = false;
@@ -229,6 +236,14 @@
 
             const dataAI = await responseAI.json();
             
+            // ✅ คำนวณเวลาเสร็จสิ้นของ AI
+            const durationAI = ((performance.now() - startTime) / 1000).toFixed(2);
+            
+            // ✅ โชว์เวลา AI
+            const aiTimeEl = document.getElementById('aiTimeText');
+            aiTimeEl.innerText = `⏱️ ใช้เวลาคิด ${durationAI} วินาที`;
+            aiTimeEl.classList.remove('hidden');
+
             // อัปเดตข้อความ AI (Typewriter Effect)
             typeWriterEffect(dataAI.analysis_th, "analysisText");
 
