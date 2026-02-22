@@ -110,7 +110,7 @@
 
                     <div class="grid grid-cols-2 gap-4 mb-6">
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <p class="text-xs text-slate-500 mb-1">รูปแบบ (Pattern)</p>
+                            <p class="text-xs text-slate-500 mb-1">รูปแบบตรงกับฐานข้อมูล</p>
                             <p id="patternText" class="font-semibold text-slate-700"></p>
                         </div>
                         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col justify-center">
@@ -306,7 +306,7 @@
         scoreFill.style.width = '0%';
 
         pattern.innerText = data.matched_pattern
-            ? '⚠️ พบรูปแบบที่เคยใช้ในคดีมิจฉาชีพ'
+            ? '⚠️ พบรูปแบบมิจฉาชีพที่คล้ายคลึงกัน'
             : '🆕 ยังไม่พบในฐานข้อมูลเดิม';
         pattern.className = data.matched_pattern
             ? 'font-bold text-red-600'
@@ -333,6 +333,7 @@
     </script>
 </body>
 </html>
+
 
 
 
