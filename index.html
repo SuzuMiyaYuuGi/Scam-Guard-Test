@@ -305,12 +305,20 @@
         scoreFill.className = `h-full rounded-full transition-all duration-1000 ease-out ${barColor}`;
         scoreFill.style.width = '0%';
 
-        pattern.innerText = data.matched_pattern
-            ? '⚠️ พบรูปแบบที่เคยใช้ในคดีมิจฉาชีพ'
-            : '🆕 ยังไม่พบในฐานข้อมูลเดิม';
-        pattern.className = data.matched_pattern
-            ? 'font-bold text-red-600'
-            : 'font-medium text-slate-700';
+        // ===== Matched Pattern (STRING from LLM) =====
+        const patternText = (data.matched_pattern || '').trim();
+
+        // ถ้า LLM บอกว่าไม่พบรูปแบบ
+        if (
+            patternText === '' ||
+            patternText === 'ไม่พบรูปแบบมิจฉาชีพชัดเจน'
+        ) {
+            pattern.innerText = '🆕 ไม่พบรูปแบบมิจฉาชีพชัดเจน';
+            pattern.className = 'font-medium text-slate-600';
+        } else {
+            pattern.innerText = `⚠️ ${patternText}`;
+            pattern.className = 'font-bold text-red-600';
+        }
 
         timeDisplay.innerText = `${duration} วินาที`;
         analysis.innerText = data.analysis_th;
@@ -333,4 +341,5 @@
     </script>
 </body>
 </html>
+
 
